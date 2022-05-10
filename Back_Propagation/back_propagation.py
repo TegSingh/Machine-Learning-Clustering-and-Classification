@@ -1,10 +1,13 @@
 from random import random, randint
 from dataset import *
+from math import exp
 
 HIDDEN_LAYER_LENGTH = 15
 INPUT_LAYER_LENGTH = 45
 OUTPUT_LAYER_LENGTH = 10
 NUM_REPLICAS = 4
+LEARNING_RATE = 0.2
+
 
 # Method to Initialize the Artificial Neural Network
 def initialize(): 
@@ -23,9 +26,9 @@ def initialize():
     print("\nInitialize Weights.....")
     print("MATRIX BETWEEN INPUT AND HIDDEN LAYER")
     weights1 = []
-    for i in range(HIDDEN_LAYER_LENGTH):
+    for i in range(INPUT_LAYER_LENGTH):
         weight_row = []
-        for j in range(INPUT_LAYER_LENGTH):
+        for j in range(HIDDEN_LAYER_LENGTH):
             weight_row.append(random())
         weights1.append(weight_row)
     
@@ -34,9 +37,9 @@ def initialize():
 
     print("\nMATRIX BETWEEN HIDDEN AND OUTPUT LAYER")
     weights2 = []
-    for i in range(OUTPUT_LAYER_LENGTH):
+    for i in range(HIDDEN_LAYER_LENGTH):
         weight_row = []
-        for j in range(HIDDEN_LAYER_LENGTH):
+        for j in range(OUTPUT_LAYER_LENGTH):
             weight_row.append(random())
         weights2.append(weight_row)
 
@@ -45,19 +48,101 @@ def initialize():
 
     return input_dataset, output_dataset, weights1, weights2
 
-def feed_forward(input, output, weights1, weights2):
-    print("Forward Propagation method called")
 
-def back_propagation():
-    print("Backward Propagation method called")
+
+def feed_forward(input, output, weights1, weights2):
+    
+    # print("Forward Propagation method called")
+    hidden_layer = []
+    output_layer = []
+
+    # Forward feeding to the hidden layer: input * weights1
+    for i in range(HIDDEN_LAYER_LENGTH): 
+        weighted_sum = 0
+        for j in range(INPUT_LAYER_LENGTH):
+            weighted_sum += input[j] * weights1[j][i]
+        weighted_sum = 1.0/(1.0 + exp(-weighted_sum))
+        hidden_layer.append(weighted_sum)
+    # print("Hidden Layer: ", hidden_layer)
+
+    # Forward feeding to the output layer: hidden * weights2
+    for i in range(OUTPUT_LAYER_LENGTH):
+        weighted_sum = 0
+        for j in range(HIDDEN_LAYER_LENGTH):
+            weighted_sum += hidden_layer[j] * weights2[j][i]
+        weighted_sum = 1.0/(1.0 + exp(-weighted_sum))
+        output_layer.append(weighted_sum)
+    # print("Output Layer: ", output_layer)
+
+    return hidden_layer, output_layer
+
+
+
+def back_propagation(input, hidden, output, weights1, weights2, expected_output):
+    
+    # print("Backward Propagation method called with input: ", input)
+
+    # Copy the weight matrices for updates
+    weights_hidden_output = weights2.copy()
+    weights_input_hidden = weights1.copy()
+    
+    # Calculate Error gradients for the output layer and add them to a list
+    delta_output = []
+    for k in range(OUTPUT_LAYER_LENGTH):
+        # Calculate error between expected and desired values
+        error = expected_output[k] - output[k]
+        # Calculate Error Gradient for the output layer
+        delta_output.append(output[k] * (1 - output[k]) * error)
+    # print("Error Gradients for the output layer: ", delta_output)
+
+    # Calculate Error gradients for the hidden layer and add them to a list
+    delta_hidden = []
+    for j in range(HIDDEN_LAYER_LENGTH):             
+        summation_gradient_weights_output = 0
+        for k in range(OUTPUT_LAYER_LENGTH):
+            summation_gradient_weights_output += delta_output[k] * weights2[j][k]
+        delta_hidden.append(hidden[j] * (1 - hidden[j]) * summation_gradient_weights_output)
+    # print("Error Gradients for the hidden layer: ", delta_hidden)
+
+    # Propagate the error backwards and make weight corrections
+    for k in range(OUTPUT_LAYER_LENGTH):
+        for j in range(HIDDEN_LAYER_LENGTH):
+            
+            # Calculate weight correction for the weights between hidden and output layers and update the weight matrix
+            weight_correction_hidden_output = LEARNING_RATE * hidden[j] * delta_output[k]
+            weights_hidden_output[j][k] += weight_correction_hidden_output
+
+            for i in range(INPUT_LAYER_LENGTH):
+                weight_correction_input_hidden = LEARNING_RATE * input[i] * delta_hidden[j]
+                weights_input_hidden[i][j] += weight_correction_input_hidden
+
+   
+    # return the updated weight values
+    return weights_input_hidden, weights_hidden_output
+
+
 
 def main():
 
     # Initialize the Neural network
     input_dataset, output_dataset, weights1, weights2 = initialize()
-    for i in range(len(input_dataset)):
-        feed_forward(input_dataset[i], output_dataset[i], weights1, weights2)
-        
+    print("\nSize of Input Dataset: ", len(input_dataset))
+    print("Size of Output Dataset: ", len(output_dataset))
+    print("Input Layer: ", INPUT_LAYER_LENGTH, " Hidden Layer: ", HIDDEN_LAYER_LENGTH, " Output Layer: ", OUTPUT_LAYER_LENGTH)
+    print("Dimensions of First Weight Matrix: ", len(weights1), "X", len(weights1[0]))
+    print("Dimensions of Second Weight Matrix: ", len(weights2), "X", len(weights2[0]))
 
+    print("Weights between Input and Hidden Layer: ", weights1[0])
+    print("\nWeights between Hidden and Output Layer: ", weights2[0])
+    
+    for i in range(len(input_dataset)):
+        hidden_layer, output_layer = feed_forward(input_dataset[i], output_dataset[i], weights1, weights2) # Forward Propagation    
+        w1, w2 = back_propagation(input_dataset[i], hidden_layer, output_layer, weights1, weights2, output_dataset) # Backward Propagation
+        weights1 = w1
+        weights2 = w2
+
+    print("Weights between Input and Hidden Layer: ", weights1[0])
+    print("\nWeights between Hidden and Output Layer: ", weights2[0])
+    
 if __name__ == '__main__':
     main()
