@@ -6,13 +6,14 @@ HIDDEN_LAYER_LENGTH = 15
 INPUT_LAYER_LENGTH = 45
 OUTPUT_LAYER_LENGTH = 10
 NUM_REPLICAS = 4
-LEARNING_RATE = 0.2
+LEARNING_RATE = 0.1
+NUM_EPOCHS = 100000
 
 
 # Method to Initialize the Artificial Neural Network
 def initialize(): 
 
-    input_dataset, output_dataset = initialize_dataset(NUM_REPLICAS)
+    input_dataset, output_dataset = initialize_dataset(NUM_REPLICAS, INPUT_LAYER_LENGTH, OUTPUT_LAYER_LENGTH)
 
     print("\nGenerating Dataset....")
     print("INPUT DATASET")
@@ -50,7 +51,7 @@ def initialize():
 
 
 
-def feed_forward(input, output, weights1, weights2):
+def feed_forward(input, weights1, weights2):
     
     # print("Forward Propagation method called")
     hidden_layer = []
@@ -132,17 +133,56 @@ def main():
     print("Dimensions of First Weight Matrix: ", len(weights1), "X", len(weights1[0]))
     print("Dimensions of Second Weight Matrix: ", len(weights2), "X", len(weights2[0]))
 
-    print("Weights between Input and Hidden Layer: ", weights1[0])
-    print("\nWeights between Hidden and Output Layer: ", weights2[0])
+    print("Weights between Input and Hidden Layer before training: ", weights1[3])
+    print("\nWeights between Hidden and Output Layer before training: ", weights2[3])
     
-    for i in range(len(input_dataset)):
-        hidden_layer, output_layer = feed_forward(input_dataset[i], output_dataset[i], weights1, weights2) # Forward Propagation    
-        w1, w2 = back_propagation(input_dataset[i], hidden_layer, output_layer, weights1, weights2, output_dataset) # Backward Propagation
-        weights1 = w1
-        weights2 = w2
+    for epoch in range(NUM_EPOCHS):
+        for i in range(len(input_dataset)):
+            hidden_layer, output_layer = feed_forward(input_dataset[i], weights1, weights2) # Forward Propagation    
+            w1, w2 = back_propagation(input_dataset[i], hidden_layer, output_layer, weights1, weights2, output_dataset[i]) # Backward Propagation
+            weights1 = w1
+            weights2 = w2
 
-    print("Weights between Input and Hidden Layer: ", weights1[0])
-    print("\nWeights between Hidden and Output Layer: ", weights2[0])
+    print("Weights between Input and Hidden Layer after training: ", weights1[3])
+    print("\nWeights between Hidden and Output Layer after training: ", weights2[3])
     
+    # Test the neural network
+    # Test for Bitmap 0
+    test_input0 = [0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0]
+    hidden_layer, ff_output = feed_forward(test_input0, weights1, weights2)
+    print("Output Layer upon forward feeding test input for Bitmap 0: ", ff_output)
+    max = ff_output[0]
+    max_index = 0
+    for i in range(len(ff_output)):
+        if ff_output[i] > max:
+            max = ff_output[i]
+            max_index = i
+    print("Actual Output: ", max_index, " Desired Output: ", 0)
+    
+    # Test for Bitmap 2
+    test_input3 = [0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0]
+    hidden_layer, ff_output = feed_forward(test_input3, weights1, weights2)
+    print("Output Layer upon forward feeding test input for Bitmap 0: ", ff_output)
+    max = ff_output[0]
+    max_index = 0
+    for i in range(len(ff_output)):
+        if ff_output[i] > max:
+            max = ff_output[i]
+            max_index = i
+    print("Actual Output: ", max_index, " Desired Output: ", 3)
+    
+    # Test for Bitmap 7
+    test_input7 = [1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]
+    hidden_layer, ff_output = feed_forward(test_input7, weights1, weights2)
+    print("Output Layer upon forward feeding test input for Bitmap 0: ", ff_output)
+    max = ff_output[0]
+    max_index = 0
+    for i in range(len(ff_output)):
+        if ff_output[i] > max:
+            max = ff_output[i]
+            max_index = i
+    print("Actual Output: ", max_index, " Desired Output: ", 7)
+    
+
 if __name__ == '__main__':
     main()

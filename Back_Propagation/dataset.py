@@ -1,4 +1,5 @@
 from random import randint
+from re import I
 
 value0 = [[0, 1, 1, 1, 0],
 [1, 0, 0, 0, 1], 
@@ -113,7 +114,7 @@ def create_replication(input):
     return value
 
 # Method to Initialize dataset given the number of replications
-def initialize_dataset(num_replicas):
+def initialize_dataset(num_replicas, num_inputs, num_outputs):
     values = []
     values.append(value0)
     values.append(value1)
@@ -143,8 +144,21 @@ def initialize_dataset(num_replicas):
     
     # Initialize the output dataset
     output_dataset = []
+    outputs = []
     for i in range(len(values)):
         for j in range(num_replicas + 1):
-            output_dataset.append(i)
+            outputs.append(i)
+
+    for i in range(len(outputs)):
+        output_row = []
+        for j in range(num_outputs):
+            if j == outputs[i]:
+                output_row.append(1)
+            else:
+                output_row.append(0)
+        output_dataset.append(output_row)
+    
+    for i in output_dataset:
+        print(i)
 
     return input_dataset, output_dataset
